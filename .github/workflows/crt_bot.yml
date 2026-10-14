@@ -5,6 +5,9 @@ on:
     - cron: '0 */4 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   run-crt-bot:
     runs-on: ubuntu-latest
@@ -27,3 +30,11 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python crt.py
+
+      - name: Commit and push sent alerts history
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.io"
+          git add sent_alerts.json || true
+          git commit -m "Update sent alerts history [skip ci]" || true
+          git push || true
