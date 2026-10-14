@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 import pandas as pd
 import numpy as np
@@ -7,6 +8,7 @@ import yfinance as yf
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+ALERTS_FILE = "sent_alerts.json"
 
 TICKER_MAPPING = {
     "EURUSD": "EURUSD=X", "GBPUSD": "GBPUSD=X", "USDJPY": "USDJPY=X", 
@@ -28,6 +30,19 @@ TIMEFRAMES = {
     "Weekly": {"interval": "1wk", "period": "5y"},
     "Daily": {"interval": "1d", "period": "1y"}
 }
+
+def load_sent_alerts():
+    if os.path.exists(ALERTS_FILE):
+        try:
+            with open(ALERTS_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_sent_alerts(alerts):
+    with open(ALERTS_FILE, 'w') as f:
+        json.dump(alerts, f, indent=4)
 
 def fetch_yahoo_data(ticker_symbol, interval, period):
     try:
@@ -219,6 +234,8 @@ def evaluate_crt(symbol, timeframe_name, df, df_weekly):
 
 def run_bot_loop():
     print("Starting CRT Yahoo Finance Scanner...")
+    sent_alerts = load_sent_alerts()
+    new_alerts_found = False
     
     for symbol, ticker in TICKER_MAPPING.items():
         print(f"Scanning {symbol} ({ticker})...")
@@ -232,6 +249,13 @@ def run_bot_loop():
             setup = evaluate_crt(symbol, tf_name, df_tf, df_weekly)
             
             if setup:
+                # Unique ID based on asset, timeframe, setup type, and candle boundaries
+                alert_id = f"{symbol}_{tf_name}_{setup['type']}_{setup['rc_high']}_{setup['rc_low']}"
+                
+                if alert_id in sent_alerts:
+                    print(f"Skipping already sent alert for {symbol} [{tf_name}]")
+                    continue
+                
                 caption = (
                     f"🚨 *CRT ALERT: {setup['classification']}*\n\n"
                     f"• *Asset:* `{setup['symbol']}`\n"
@@ -245,6 +269,12 @@ def run_bot_loop():
                 )
                 send_telegram_alert(setup['chart_path'], caption)
                 print(f"Alert sent for {setup['symbol']} [{setup['timeframe']}]")
+                
+                sent_alerts.append(alert_id)
+                new_alerts_found = True
+
+    if new_alerts_found:
+        save_sent_alerts(sent_alerts)
 
 if __name__ == "__main__":
     run_bot_loop()
