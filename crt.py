@@ -11,18 +11,12 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 ALERTS_FILE = "sent_alerts.json"
 
 TICKER_MAPPING = {
-    "EURUSD": "EURUSD=X", "GBPUSD": "GBPUSD=X", "USDJPY": "USDJPY=X", 
-    "AUDUSD": "AUDUSD=X", "USDCAD": "USDCAD=X", "NZDUSD": "NZDUSD=X", "USDCHF": "USDCHF=X",
-    "EURGBP": "EURGBP=X", "EURJPY": "EURJPY=X", "EURAUD": "EURAUD=X", "EURNZD": "EURNZD=X", 
-    "EURCAD": "EURCAD=X", "EURCHF": "EURCHF=X", "GBPJPY": "GBPJPY=X", "GBPAUD": "GBPAUD=X", 
-    "GBPNZD": "GBPNZD=X", "GBPCAD": "GBPCAD=X", "GBPCHF": "GBPCHF=X",
-    "AUDJPY": "AUDJPY=X", "AUDNZD": "AUDNZD=X", "AUDCAD": "AUDCAD=X", "AUDCHF": "AUDCHF=X",
-    "NZDJPY": "NZDJPY=X", "NZDCAD": "NZDCAD=X", "NZDCHF": "NZDCHF=X",
-    "CADJPY": "CADJPY=X", "CADCHF": "CADCHF=X", "CHFJPY": "CHFJPY=X",
-    "NAS100": "^NDX", "SPX500": "^GSPC", "US30": "^DJI", 
-    "JP225": "^N225", "GER40": "^GDAXI", "EURO50": "^STOXX50E",
-    "Gold": "GC=F", "Silver": "SI=F",
-    "BTCUSD": "BTC-USD", "ETHUSD": "ETH-USD"
+    "EURUSD": "EURUSD=X", "GBPUSD": "GBPUSD=X", "USDCAD": "USDCAD=X", 
+    "AUDUSD": "AUDUSD=X", "NZDUSD": "NZDUSD=X", "USDJPY": "USDJPY=X", 
+    "USDCHF": "USDCHF=X", "JP225": "^N225", "US30": "^DJI", 
+    "NAS100": "^NDX", "SPX500": "^GSPC", "GER40": "^GDAXI", 
+    "AUS200": "^AXJO", "FRA40": "^FCHI", "XAGUSD": "SI=F", 
+    "XAUUSD": "GC=F"
 }
 
 TIMEFRAMES = {
@@ -129,9 +123,13 @@ def scan_key_levels(df):
             bb_bottom = df.iloc[i]['Low']
             key_levels.append({"type": "BreakerBlock", "top": bb_top, "bottom": bb_bottom})
 
-        if i > 4 and df.iloc[i]['High'] > df.iloc[i-2]['High'] and df.iloc[i]['Low'] < df.iloc[i-3]['Low']:
-            qm_level = df.iloc[i-2]['High']
-            key_levels.append({"type": "Quasimodo", "top": qm_level * 1.001, "bottom": qm_level * 0.999})
+        bar_open = df.iloc[i]['Open']
+        bar_close = df.iloc[i]['Close']
+        oc_top = max(bar_open, bar_close)
+        oc_bottom = min(bar_open, bar_close)
+        oc_mitigated = any(df.iloc[j]['Low'] <= oc_bottom and df.iloc[j]['High'] >= oc_top for j in range(i+1, len(df)))
+        if not oc_mitigated:
+            key_levels.append({"type": "OpenCloseKL", "top": oc_top, "bottom": oc_bottom})
                 
     return key_levels
 
@@ -173,7 +171,7 @@ def generate_crt_chart(symbol, timeframe_name, df, ref_high, ref_low, setup_type
     return filename
 
 def evaluate_crt(symbol, timeframe_name, df, df_weekly):
-    if df is None or len(df) < 3:
+    if df is None or len(df) < 5:
         return None
         
     ref_high = df.iloc[-2]['High']
@@ -183,53 +181,77 @@ def evaluate_crt(symbol, timeframe_name, df, df_weekly):
     curr_high = df.iloc[-1]['High']
     curr_close = df.iloc[-1]['Close']
     
+    prev_high = df.iloc[-2]['High']
+    prev_low = df.iloc[-2]['Low']
+    
     weekly_trend = get_weekly_trend(df_weekly)
     all_kls = scan_key_levels(df)
     
-    setup = None
+    setup_model = None
+    setup_type_str = None
     
-    if curr_low < ref_low and curr_close > ref_low:
-        has_kl, kl_note = check_kl_confluence(curr_low, all_kls)
-        is_aligned = (weekly_trend == "Uptrend")
-        
-        classification = "High Probability CRT (Trend-Following)" if is_aligned else "Reversal CRT"
-        classification += f" + {kl_note}"
-            
-        setup = {
-            "symbol": symbol,
-            "timeframe": timeframe_name,
-            "type": "Bullish CRT (Low Sweep)",
-            "classification": classification,
-            "rc_high": ref_high,
-            "rc_low": ref_low,
-            "sweep_extreme": curr_low,
-            "weekly_trend": weekly_trend,
-            "kl_note": kl_note
-        }
-        
+    is_inside_bar = (prev_high <= df.iloc[-3]['High']) and (prev_low >= df.iloc[-3]['Low'])
+    if is_inside_bar and curr_low < prev_low and curr_close > prev_low:
+        setup_model = "Inside Bar CRT"
+        setup_type_str = "Bullish Inside Bar Sweep"
+        sweep_extreme = curr_low
+    elif is_inside_bar and curr_high > prev_high and curr_close < prev_high:
+        setup_model = "Inside Bar CRT"
+        setup_type_str = "Bearish Inside Bar Sweep"
+        sweep_extreme = curr_high
+    elif curr_low < ref_low and curr_close > ref_low and (curr_close - curr_low) > (curr_high - curr_close):
+        setup_model = "2-Candle CRT"
+        setup_type_str = "Bullish 2-Candle Rejection"
+        sweep_extreme = curr_low
+    elif curr_high > ref_high and curr_close < ref_high and (curr_high - curr_close) > (curr_close - curr_low):
+        setup_model = "2-Candle CRT"
+        setup_type_str = "Bearish 2-Candle Rejection"
+        sweep_extreme = curr_high
+    elif curr_low < df['Low'].iloc[-6:-1].min() and curr_close > df['Low'].iloc[-6:-1].min():
+        setup_model = "Multiple-Candle CRT"
+        setup_type_str = "Bullish Multi-Bar Sweep"
+        sweep_extreme = curr_low
+        ref_low = df['Low'].iloc[-6:-1].min()
+    elif curr_high > df['High'].iloc[-6:-1].max() and curr_close < df['High'].iloc[-6:-1].max():
+        setup_model = "Multiple-Candle CRT"
+        setup_type_str = "Bearish Multi-Bar Sweep"
+        sweep_extreme = curr_high
+        ref_high = df['High'].iloc[-6:-1].max()
+    elif curr_low < ref_low and curr_close > ref_low:
+        setup_model = "Classic 3-Candle CRT"
+        setup_type_str = "Bullish Classic Sweep"
+        sweep_extreme = curr_low
     elif curr_high > ref_high and curr_close < ref_high:
-        has_kl, kl_note = check_kl_confluence(curr_high, all_kls)
-        is_aligned = (weekly_trend == "Downtrend")
-        
-        classification = "High Probability CRT (Trend-Following)" if is_aligned else "Reversal CRT"
-        classification += f" + {kl_note}"
-            
-        setup = {
-            "symbol": symbol,
-            "timeframe": timeframe_name,
-            "type": "Bearish CRT (High Sweep)",
-            "classification": classification,
-            "rc_high": ref_high,
-            "rc_low": ref_low,
-            "sweep_extreme": curr_high,
-            "weekly_trend": weekly_trend,
-            "kl_note": kl_note
-        }
-        
-    if setup:
-        chart_path = generate_crt_chart(symbol, timeframe_name, df, ref_high, ref_low, setup['type'])
-        setup['chart_path'] = chart_path
-        
+        setup_model = "Classic 3-Candle CRT"
+        setup_type_str = "Bearish Classic Sweep"
+        sweep_extreme = curr_high
+
+    if not setup_model:
+        return None
+
+    is_bullish = "Bullish" in setup_type_str
+    is_aligned = (weekly_trend == "Uptrend" if is_bullish else weekly_trend == "Downtrend")
+    
+    has_kl, kl_note = check_kl_confluence(sweep_extreme, all_kls)
+    classification = "High Probability CRT (Trend-Following)" if is_aligned else "Reversal CRT"
+    classification += f" + {kl_note}"
+
+    setup = {
+        "symbol": symbol,
+        "timeframe": timeframe_name,
+        "model": setup_model,
+        "type": setup_type_str,
+        "classification": classification,
+        "rc_high": ref_high,
+        "rc_low": ref_low,
+        "sweep_extreme": sweep_extreme,
+        "weekly_trend": weekly_trend,
+        "kl_note": kl_note
+    }
+    
+    chart_path = generate_crt_chart(symbol, timeframe_name, df, ref_high, ref_low, setup_type_str)
+    setup['chart_path'] = chart_path
+    
     return setup
 
 def run_bot_loop():
@@ -249,18 +271,18 @@ def run_bot_loop():
             setup = evaluate_crt(symbol, tf_name, df_tf, df_weekly)
             
             if setup:
-                # Unique ID based on asset, timeframe, setup type, and candle boundaries
-                alert_id = f"{symbol}_{tf_name}_{setup['type']}_{setup['rc_high']}_{setup['rc_low']}"
+                alert_id = f"{symbol}_{tf_name}_{setup['model']}_{setup['type']}_{setup['rc_high']}_{setup['rc_low']}"
                 
                 if alert_id in sent_alerts:
-                    print(f"Skipping already sent alert for {symbol} [{tf_name}]")
+                    print(f"Skipping already sent alert for {symbol} [{tf_name}] ({setup['model']})")
                     continue
                 
                 caption = (
                     f"🚨 *CRT ALERT: {setup['classification']}*\n\n"
                     f"• *Asset:* `{setup['symbol']}`\n"
                     f"• *Timeframe:* {setup['timeframe']}\n"
-                    f"• *Setup Type:* {setup['type']}\n"
+                    f"• *CRT Model:* `{setup['model']}`\n"
+                    f"• *Setup Variant:* {setup['type']}\n"
                     f"• *Weekly Trend:* {setup['weekly_trend']}\n"
                     f"• *Key Level (KL):* {setup['kl_note']}\n"
                     f"• *CRT High:* `{setup['rc_high']:.5f}`\n"
@@ -268,7 +290,7 @@ def run_bot_loop():
                     f"• *Sweep Extreme:* `{setup['sweep_extreme']:.5f}`"
                 )
                 send_telegram_alert(setup['chart_path'], caption)
-                print(f"Alert sent for {setup['symbol']} [{setup['timeframe']}]")
+                print(f"Alert sent for {setup['symbol']} [{setup['timeframe']}] - {setup['model']}")
                 
                 sent_alerts.append(alert_id)
                 new_alerts_found = True
