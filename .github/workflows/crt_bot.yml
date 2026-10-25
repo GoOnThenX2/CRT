@@ -5,36 +5,35 @@ on:
     - cron: '0 */4 * * *'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  run-crt-bot:
+  run-bot:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          pip install pandas numpy mplfinance requests yfinance
+          python -m pip install --upgrade pip
+          pip install yfinance mplfinance pandas numpy requests
 
-      - name: Run CRT Bot Script
+      - name: Run bot script
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          python crt.py
+        run: python crt.py
 
-      - name: Commit and push sent alerts history
+      - name: Commit and push sent alerts
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.io"
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add sent_alerts.json || true
-          git commit -m "Update sent alerts history [skip ci]" || true
+          git commit -m "Update sent_alerts.json [skip ci]" || true
           git push || true
