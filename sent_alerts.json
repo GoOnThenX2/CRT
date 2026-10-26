@@ -352,5 +352,6 @@
     "USDCHF_Weekly_Classic 3-Candle CRT_Bearish Classic Sweep_0.8267999887466431_0.8191699981689453",
     "USDCHF_Daily_Multiple-Candle CRT_Bearish Multi-Bar Sweep_0.8267999887466431_0.8191699981689453",
     "FRA40_Monthly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_8372.5498046875_7854.27978515625",
-    "XAGUSD_Daily_2-Candle CRT_Bearish 2-Candle Rejection_53.71099853515625_53.71099853515625"
+    "XAGUSD_Daily_2-Candle CRT_Bearish 2-Candle Rejection_53.71099853515625_53.71099853515625",
+    "NZDUSD_Daily_Inside Bar CRT_Bullish Inside Bar Sweep_0.5704506635665894_0.5680914521217346"
 ]
