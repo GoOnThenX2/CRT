@@ -390,5 +390,9 @@
     "NAS100_Daily_2-Candle CRT_Bearish 2-Candle Rejection_29719.630859375_29340.5390625",
     "SPX500_Daily_Classic 3-Candle CRT_Bearish Classic Sweep_7736.240234375_7677.16015625",
     "GER40_Weekly_Classic 3-Candle CRT_Bearish Classic Sweep_25706.189453125_25013.5390625",
-    "GER40_Daily_Multiple-Candle CRT_Bearish Multi-Bar Sweep_25706.189453125_25340.2109375"
+    "GER40_Daily_Multiple-Candle CRT_Bearish Multi-Bar Sweep_25706.189453125_25340.2109375",
+    "EURUSD_Weekly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_1.1259105205535889_1.1114075183868408",
+    "USDCHF_Daily_2-Candle CRT_Bearish 2-Candle Rejection_0.8291599750518799_0.8270000219345093",
+    "US30_Daily_2-Candle CRT_Bearish 2-Candle Rejection_52477.91015625_52231.83984375",
+    "XAGUSD_Daily_2-Candle CRT_Bullish 2-Candle Rejection_54.292999267578125_53.654998779296875"
 ]
