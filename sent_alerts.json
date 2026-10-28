@@ -382,5 +382,7 @@
     "XAGUSD_Daily_2-Candle CRT_Bearish 2-Candle Rejection_54.292999267578125_53.654998779296875",
     "XAUUSD_Daily_2-Candle CRT_Bearish 2-Candle Rejection_4079.39990234375_4001.60009765625",
     "FRA40_Daily_2-Candle CRT_Bearish 2-Candle Rejection_7909.740234375_7810.919921875",
-    "XAUUSD_Daily_Classic 3-Candle CRT_Bearish Classic Sweep_4079.39990234375_4001.60009765625"
+    "XAUUSD_Daily_Classic 3-Candle CRT_Bearish Classic Sweep_4079.39990234375_4001.60009765625",
+    "EURUSD_Daily_2-Candle CRT_Bullish 2-Candle Rejection_1.117817997932434_1.1136106252670288",
+    "USDCAD_Daily_Inside Bar CRT_Bearish Inside Bar Sweep_1.4039599895477295_1.4007999897003174"
 ]
