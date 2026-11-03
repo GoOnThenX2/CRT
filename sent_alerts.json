@@ -469,5 +469,8 @@
     "USDCHF_Daily_2-Candle CRT_Bullish 2-Candle Rejection_0.8252599835395813_0.8184000253677368",
     "XAGUSD_Monthly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_61.6150016784668_48.8849983215332",
     "XAGUSD_Weekly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_54.292999267578125_48.8849983215332",
-    "XAGUSD_Daily_Multiple-Candle CRT_Bullish Multi-Bar Sweep_50.91999816894531_48.8849983215332"
+    "XAGUSD_Daily_Multiple-Candle CRT_Bullish Multi-Bar Sweep_50.91999816894531_48.8849983215332",
+    "NAS100_Monthly_Classic 3-Candle CRT_Bullish Classic Sweep_31361.369140625_28093.240234375",
+    "NAS100_Weekly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_29848.7109375_28093.240234375",
+    "FRA40_Daily_2-Candle CRT_Bearish 2-Candle Rejection_8054.22998046875_7944.72021484375"
 ]
