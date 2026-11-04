@@ -487,5 +487,8 @@
     "USDCHF_Daily_Multiple-Candle CRT_Bullish Multi-Bar Sweep_0.821690022945404_0.8150699734687805",
     "JP225_Monthly_2-Candle CRT_Bullish 2-Candle Rejection_70798.6171875_61462.609375",
     "JP225_Weekly_Inside Bar CRT_Bullish Inside Bar Sweep_64831.2890625_62094.33984375",
-    "XAGUSD_Weekly_2-Candle CRT_Bullish 2-Candle Rejection_54.292999267578125_48.8849983215332"
+    "XAGUSD_Weekly_2-Candle CRT_Bullish 2-Candle Rejection_54.292999267578125_48.8849983215332",
+    "USDCAD_Monthly_Classic 3-Candle CRT_Bullish Classic Sweep_1.4298900365829468_1.3941600322723389",
+    "USDCAD_Weekly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_1.406730055809021_1.3941600322723389",
+    "AUDUSD_Weekly_2-Candle CRT_Bullish 2-Candle Rejection_0.706780195236206_0.7012499570846558"
 ]
