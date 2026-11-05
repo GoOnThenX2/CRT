@@ -507,5 +507,12 @@
     "AUDUSD_Daily_2-Candle CRT_Bearish 2-Candle Rejection_0.7021899819374084_0.6955699324607849",
     "NZDUSD_Daily_2-Candle CRT_Bearish 2-Candle Rejection_0.5646399855613708_0.5584189891815186",
     "JP225_Monthly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_70798.6171875_60448.8984375",
-    "GER40_Monthly_Multiple-Candle CRT_Bearish Multi-Bar Sweep_26618.740234375_24792.7890625"
+    "GER40_Monthly_Multiple-Candle CRT_Bearish Multi-Bar Sweep_26618.740234375_24792.7890625",
+    "USDCAD_Daily_Classic 3-Candle CRT_Bearish Classic Sweep_1.4004499912261963_1.3930200338363647",
+    "US30_Monthly_2-Candle CRT_Bearish 2-Candle Rejection_52927.87890625_50546.5390625",
+    "US30_Weekly_2-Candle CRT_Bearish 2-Candle Rejection_52634.3203125_51563.76171875",
+    "US30_Daily_2-Candle CRT_Bearish 2-Candle Rejection_53492.3984375_52410.23046875",
+    "GER40_Daily_2-Candle CRT_Bearish 2-Candle Rejection_26541.640625_25876.8203125",
+    "FRA40_Daily_2-Candle CRT_Bearish 2-Candle Rejection_8215.8603515625_8030.68994140625",
+    "XAGUSD_Daily_2-Candle CRT_Bullish 2-Candle Rejection_52.119998931884766_51.93000030517578"
 ]
