@@ -577,5 +577,8 @@
     "USDJPY_Daily_2-Candle CRT_Bearish 2-Candle Rejection_158.8419952392578_157.8699951171875",
     "FRA40_Weekly_2-Candle CRT_Bullish 2-Candle Rejection_8286.4296875_7944.72021484375",
     "EURUSD_Daily_Classic 3-Candle CRT_Bullish Classic Sweep_1.1250618696212769_1.1146905422210693",
-    "GER40_Daily_2-Candle CRT_Bearish 2-Candle Rejection_26633.779296875_26347.44921875"
+    "GER40_Daily_2-Candle CRT_Bearish 2-Candle Rejection_26633.779296875_26347.44921875",
+    "GBPUSD_Daily_Multiple-Candle CRT_Bullish Multi-Bar Sweep_1.3458588123321533_1.3314337730407715",
+    "NZDUSD_Daily_Classic 3-Candle CRT_Bullish Classic Sweep_0.5650068521499634_0.5587809681892395",
+    "FRA40_Daily_2-Candle CRT_Bearish 2-Candle Rejection_8337.58984375_8278.58984375"
 ]
