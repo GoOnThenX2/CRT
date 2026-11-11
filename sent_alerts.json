@@ -571,5 +571,9 @@
     "AUDUSD_Daily_Inside Bar CRT_Bullish Inside Bar Sweep_0.6912856101989746_0.6866598725318909",
     "USDCHF_Weekly_Classic 3-Candle CRT_Bearish Classic Sweep_0.8252599835395813_0.8128899931907654",
     "FRA40_Weekly_Multiple-Candle CRT_Bearish Multi-Bar Sweep_8286.4296875_7944.72021484375",
-    "FRA40_Daily_Multiple-Candle CRT_Bearish Multi-Bar Sweep_8286.4296875_8107.080078125"
+    "FRA40_Daily_Multiple-Candle CRT_Bearish Multi-Bar Sweep_8286.4296875_8107.080078125",
+    "USDJPY_Monthly_Inside Bar CRT_Bearish Inside Bar Sweep_158.94200134277344_156.0959930419922",
+    "USDJPY_Weekly_Multiple-Candle CRT_Bearish Multi-Bar Sweep_158.94200134277344_157.41900634765625",
+    "USDJPY_Daily_2-Candle CRT_Bearish 2-Candle Rejection_158.8419952392578_157.8699951171875",
+    "FRA40_Weekly_2-Candle CRT_Bullish 2-Candle Rejection_8286.4296875_7944.72021484375"
 ]
