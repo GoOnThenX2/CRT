@@ -599,5 +599,10 @@
     "SPX500_Daily_2-Candle CRT_Bullish 2-Candle Rejection_7647.2001953125_7571.8798828125",
     "US30_Daily_2-Candle CRT_Bearish 2-Candle Rejection_52512.71875_52055.140625",
     "SPX500_Daily_2-Candle CRT_Bearish 2-Candle Rejection_7647.2001953125_7571.8798828125",
-    "XAUUSD_Monthly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_4259.0_3879.300048828125"
+    "XAUUSD_Monthly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_4259.0_3879.300048828125",
+    "EURUSD_Daily_2-Candle CRT_Bullish 2-Candle Rejection_1.1103708744049072_1.1054121255874634",
+    "NZDUSD_Daily_Classic 3-Candle CRT_Bullish Classic Sweep_0.557037889957428_0.5541578531265259",
+    "USDCHF_Daily_Multiple-Candle CRT_Bearish Multi-Bar Sweep_0.8353700041770935_0.8311399817466736",
+    "JP225_Daily_2-Candle CRT_Bearish 2-Candle Rejection_61788.44140625_60643.7890625",
+    "XAUUSD_Monthly_2-Candle CRT_Bullish 2-Candle Rejection_4259.0_3879.300048828125"
 ]
