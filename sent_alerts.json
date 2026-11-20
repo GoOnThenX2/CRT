@@ -666,5 +666,7 @@
     "AUDUSD_Daily_2-Candle CRT_Bullish 2-Candle Rejection_0.6720497608184814_0.6662797927856445",
     "NZDUSD_Daily_2-Candle CRT_Bullish 2-Candle Rejection_0.5534217953681946_0.5484710931777954",
     "USDCHF_Daily_2-Candle CRT_Bearish 2-Candle Rejection_0.844219982624054_0.84170001745224",
-    "FRA40_Weekly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_8401.7197265625_7728.4501953125"
+    "FRA40_Weekly_Multiple-Candle CRT_Bullish Multi-Bar Sweep_8401.7197265625_7728.4501953125",
+    "NZDUSD_Daily_Multiple-Candle CRT_Bullish Multi-Bar Sweep_0.5534217953681946_0.5482997298240662",
+    "USDCHF_Weekly_2-Candle CRT_Bearish 2-Candle Rejection_0.8391799926757812_0.8173999786376953"
 ]
