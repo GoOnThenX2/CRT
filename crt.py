@@ -71,7 +71,6 @@ def get_weekly_trend(df_weekly):
 
     df_weekly = df_weekly.copy()
     df_weekly['EMA200'] = df_weekly['Close'].ewm(span=200, adjust=False).mean()
-    # Use last completed weekly bar (-2) for stable trend context
     last_closed = df_weekly.iloc[-2]
     prior_closed = df_weekly.iloc[-6]
 
@@ -96,6 +95,7 @@ def scan_key_levels(df_closed):
         return key_levels
 
     for i in range(2, len(df_closed) - 1):
+        # Unmitigated Fair Value Gaps (FVG) only
         if df_closed.iloc[i-1]['Low'] > df_closed.iloc[i+1]['High']:
             fvg_top = df_closed.iloc[i-1]['Low']
             fvg_bottom = df_closed.iloc[i+1]['High']
@@ -109,39 +109,13 @@ def scan_key_levels(df_closed):
             if not mitigated:
                 key_levels.append({"type": "FVG", "top": fvg_top, "bottom": fvg_bottom})
 
-        if df_closed.iloc[i]['Close'] < df_closed.iloc[i]['Open'] and df_closed.iloc[i+1]['Close'] > df_closed.iloc[i+1]['Open'] * 1.002:
-            ob_top = df_closed.iloc[i]['High']
-            ob_bottom = df_closed.iloc[i]['Low']
-            mitigated = any(df_closed.iloc[j]['Low'] <= ob_bottom for j in range(i+2, len(df_closed)))
-            if not mitigated:
-                key_levels.append({"type": "OrderBlock", "top": ob_top, "bottom": ob_bottom})
-        elif df_closed.iloc[i]['Close'] > df_closed.iloc[i]['Open'] and df_closed.iloc[i+1]['Close'] < df_closed.iloc[i+1]['Open'] * 1.002:
-            ob_top = df_closed.iloc[i]['High']
-            ob_bottom = df_closed.iloc[i]['Low']
-            mitigated = any(df_closed.iloc[j]['High'] >= ob_top for j in range(i+2, len(df_closed)))
-            if not mitigated:
-                key_levels.append({"type": "OrderBlock", "top": ob_top, "bottom": ob_bottom})
-
-        if i > 5 and df_closed.iloc[i]['High'] > df_closed.iloc[i-1]['High'] and df_closed.iloc[i]['Close'] < df_closed.iloc[i-1]['Low']:
-            bb_top = df_closed.iloc[i]['High']
-            bb_bottom = df_closed.iloc[i]['Low']
-            key_levels.append({"type": "BreakerBlock", "top": bb_top, "bottom": bb_bottom})
-
-        bar_open = df_closed.iloc[i]['Open']
-        bar_close = df_closed.iloc[i]['Close']
-        oc_top = max(bar_open, bar_close)
-        oc_bottom = min(bar_open, bar_close)
-        oc_mitigated = any(df_closed.iloc[j]['Low'] <= oc_bottom and df_closed.iloc[j]['High'] >= oc_top for j in range(i+1, len(df_closed)))
-        if not oc_mitigated:
-            key_levels.append({"type": "OpenCloseKL", "top": oc_top, "bottom": oc_bottom})
-
     return key_levels
 
 def check_kl_confluence(price_point, key_levels):
     for kl in key_levels:
         if kl['bottom'] <= price_point <= kl['top']:
             return True, f"Tapped {kl['type']} ({kl['bottom']:.5f} - {kl['top']:.5f})"
-    return False, "No Key Level Intersected"
+    return False, "No FVG Intersected"
 
 def generate_crt_chart(symbol, timeframe_name, df_closed, ref_high, ref_low, setup_type):
     plot_df = df_closed.tail(40).copy()
@@ -174,28 +148,29 @@ def generate_crt_chart(symbol, timeframe_name, df_closed, ref_high, ref_low, set
     )
     return filename
 
+def closed_inside_range(close_price, low_bound, high_bound):
+    return (low_bound <= close_price) and (close_price <= high_bound)
+
 def evaluate_crt(symbol, timeframe_name, df, df_weekly):
-    # Need at least 7 closed bars + 1 active bar (-1)
     if df is None or len(df) < 8:
         return None
 
-    # Exclude the currently developing bar (-1) so only closed candles are evaluated
     df_closed = df.iloc[:-1]
 
-    # Most recently closed bar is the sweep candle (-1 in df_closed / -2 in df)
     sweep_bar = df_closed.iloc[-1]
     sweep_time = str(df_closed.index[-1])
     sweep_low = sweep_bar['Low']
     sweep_high = sweep_bar['High']
     sweep_close = sweep_bar['Close']
 
-    # Reference bar is the bar immediately preceding the closed sweep candle
     ref_bar = df_closed.iloc[-2]
     ref_high = ref_bar['High']
     ref_low = ref_bar['Low']
 
-    # Bar before reference bar (for Inside Bar CRT check)
     pre_ref_bar = df_closed.iloc[-3]
+
+    multi_low = df_closed['Low'].iloc[-6:-1].min()
+    multi_high = df_closed['High'].iloc[-6:-1].max()
 
     weekly_trend = get_weekly_trend(df_weekly)
     all_kls = scan_key_levels(df_closed)
@@ -204,45 +179,47 @@ def evaluate_crt(symbol, timeframe_name, df, df_weekly):
     setup_type_str = None
     sweep_extreme = None
 
-    # 1. Inside Bar CRT Check (ref_bar inside pre_ref_bar, then closed sweep_bar sweeps & closes back inside)
+    # 1. Inside Bar CRT Check (closed inside reference candle's range)
     is_inside_bar = (ref_high <= pre_ref_bar['High']) and (ref_low >= pre_ref_bar['Low'])
-    if is_inside_bar and sweep_low < ref_low and sweep_close > ref_low:
+    if is_inside_bar and sweep_low < ref_low and closed_inside_range(sweep_close, ref_low, ref_high):
         setup_model = "Inside Bar CRT"
         setup_type_str = "Bullish Inside Bar Sweep"
         sweep_extreme = sweep_low
-    elif is_inside_bar and sweep_high > ref_high and sweep_close < ref_high:
+    elif is_inside_bar and sweep_high > ref_high and closed_inside_range(sweep_close, ref_low, ref_high):
         setup_model = "Inside Bar CRT"
         setup_type_str = "Bearish Inside Bar Sweep"
         sweep_extreme = sweep_high
 
-    # 2. 2-Candle CRT Check (closed sweep_bar purges reference extreme with strong rejection close)
-    elif sweep_low < ref_low and sweep_close > ref_low and (sweep_close - sweep_low) > (sweep_high - sweep_close):
+    # 2. 2-Candle CRT Check (closed inside reference candle's range with rejection)
+    elif sweep_low < ref_low and closed_inside_range(sweep_close, ref_low, ref_high) and (sweep_close - sweep_low) > (sweep_high - sweep_close):
         setup_model = "2-Candle CRT"
         setup_type_str = "Bullish 2-Candle Rejection"
         sweep_extreme = sweep_low
-    elif sweep_high > ref_high and sweep_close < ref_high and (sweep_high - sweep_close) > (sweep_close - sweep_low):
+    elif sweep_high > ref_high and closed_inside_range(sweep_close, ref_low, ref_high) and (sweep_high - sweep_close) > (sweep_close - sweep_low):
         setup_model = "2-Candle CRT"
         setup_type_str = "Bearish 2-Candle Rejection"
         sweep_extreme = sweep_high
 
-    # 3. Multiple-Candle CRT Check (closed sweep_bar sweeps 5-bar prior range and closes back inside)
-    elif sweep_low < df_closed['Low'].iloc[-6:-1].min() and sweep_close > df_closed['Low'].iloc[-6:-1].min():
+    # 3. Multiple-Candle CRT Check (closed inside multi-bar reference range)
+    elif sweep_low < multi_low and closed_inside_range(sweep_close, multi_low, multi_high):
         setup_model = "Multiple-Candle CRT"
         setup_type_str = "Bullish Multi-Bar Sweep"
         sweep_extreme = sweep_low
-        ref_low = df_closed['Low'].iloc[-6:-1].min()
-    elif sweep_high > df_closed['High'].iloc[-6:-1].max() and sweep_close < df_closed['High'].iloc[-6:-1].max():
+        ref_low = multi_low
+        ref_high = multi_high
+    elif sweep_high > multi_high and closed_inside_range(sweep_close, multi_low, multi_high):
         setup_model = "Multiple-Candle CRT"
         setup_type_str = "Bearish Multi-Bar Sweep"
         sweep_extreme = sweep_high
-        ref_high = df_closed['High'].iloc[-6:-1].max()
+        ref_low = multi_low
+        ref_high = multi_high
 
-    # 4. Classic 3-Candle CRT Check
-    elif sweep_low < ref_low and sweep_close > ref_low:
+    # 4. Classic 3-Candle CRT Check (closed inside reference candle's range)
+    elif sweep_low < ref_low and closed_inside_range(sweep_close, ref_low, ref_high):
         setup_model = "Classic 3-Candle CRT"
         setup_type_str = "Bullish Classic Sweep"
         sweep_extreme = sweep_low
-    elif sweep_high > ref_high and sweep_close < ref_high:
+    elif sweep_high > ref_high and closed_inside_range(sweep_close, ref_low, ref_high):
         setup_model = "Classic 3-Candle CRT"
         setup_type_str = "Bearish Classic Sweep"
         sweep_extreme = sweep_high
@@ -277,7 +254,7 @@ def evaluate_crt(symbol, timeframe_name, df, df_weekly):
     return setup
 
 def run_bot_loop():
-    print("Starting CRT Yahoo Finance Scanner (Closed Sweep Mode)...")
+    print("Starting CRT Yahoo Finance Scanner (Closed Sweep + Inside Range + FVG Only)...")
     sent_alerts = load_sent_alerts()
     new_alerts_found = False
 
@@ -303,14 +280,14 @@ def run_bot_loop():
                     continue
 
                 caption = (
-                    f"🚨 *CRT ALERT (CLOSED SWEEP): {setup['classification']}*\n\n"
+                    f"🚨 *CRT ALERT (CLOSED INSIDE): {setup['classification']}*\n\n"
                     f"• *Asset:* `{setup['symbol']}`\n"
                     f"• *Timeframe:* {setup['timeframe']}\n"
                     f"• *Sweep Close:* `{setup['sweep_time']}`\n"
                     f"• *CRT Model:* `{setup['model']}`\n"
                     f"• *Setup Variant:* {setup['type']}\n"
                     f"• *Weekly Trend:* {setup['weekly_trend']}\n"
-                    f"• *Key Level (KL):* {setup['kl_note']}\n"
+                    f"• *Key Level (FVG):* {setup['kl_note']}\n"
                     f"• *CRT High:* `{setup['rc_high']:.5f}`\n"
                     f"• *CRT Low:* `{setup['rc_low']:.5f}`\n"
                     f"• *Sweep Extreme:* `{setup['sweep_extreme']:.5f}`"
