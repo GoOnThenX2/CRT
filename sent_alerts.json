@@ -707,5 +707,9 @@
     "NZDUSD_Daily_2026-11-24 00:00:00_2-Candle CRT_Bearish 2-Candle Rejection_0.54833_0.54346",
     "USDJPY_Daily_2026-11-24 00:00:00_Inside Bar CRT_Bullish Inside Bar Sweep_159.48399_158.80400",
     "USDCHF_Daily_2026-11-24 00:00:00_2-Candle CRT_Bullish 2-Candle Rejection_0.84400_0.83687",
-    "JP225_Daily_2026-11-24 00:00:00_Classic 3-Candle CRT_Bearish Classic Sweep_58707.48047_56436.64844"
+    "JP225_Daily_2026-11-24 00:00:00_Classic 3-Candle CRT_Bearish Classic Sweep_58707.48047_56436.64844",
+    "NAS100_Monthly_2026-10-01 00:00:00_Multiple-Candle CRT_Bearish Multi-Bar Sweep_30770.63086_27176.02930",
+    "FRA40_Weekly_2026-11-16 00:00:00_Multiple-Candle CRT_Bearish Multi-Bar Sweep_8401.71973_7728.45020",
+    "FRA40_Daily_2026-11-24 00:00:00_2-Candle CRT_Bearish 2-Candle Rejection_8059.58984_7949.50977",
+    "XAUUSD_Daily_2026-11-24 00:00:00_Classic 3-Candle CRT_Bullish Classic Sweep_3691.00000_3552.30005"
 ]
