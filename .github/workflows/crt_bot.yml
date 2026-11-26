@@ -1,39 +1,47 @@
-name: CRT Telegram Bot Scanner
+name: CRT Alert Bot
 
 on:
   schedule:
-    - cron: '0 */4 * * *'
+    - cron: '1 22 * * *' # Daily at 22:01 UTC = 11:01 PM WAT
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  run-bot:
+  run-crt-bot:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install yfinance mplfinance pandas numpy requests
+          pip install requests pandas numpy mplfinance yfinance
 
-      - name: Run bot script
+      - name: Run CRT scanner
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python crt.py
-
-      - name: Commit and push sent alerts
+          TZ: Africa/Lagos
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add sent_alerts.json || true
-          git commit -m "Update sent_alerts.json [skip ci]" || true
-          git push || true
+          python crt.py
+
+      - name: Commit updated sent_alerts.json
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add sent_alerts.json
+          if git diff --staged --quiet; then
+            echo "No new alerts to commit."
+          else
+            git commit -m "Update sent_alerts.json [skip ci]"
+            git push
+          fi
