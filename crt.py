@@ -29,14 +29,16 @@ def load_sent_alerts():
     if os.path.exists(ALERTS_FILE):
         try:
             with open(ALERTS_FILE, 'r') as f:
-                return json.load(f)
+                data = json.load(f)
+                return list(dict.fromkeys(data)) if isinstance(data, list) else []
         except Exception:
             return []
     return []
 
 def save_sent_alerts(alerts):
+    deduped = list(dict.fromkeys(alerts))
     with open(ALERTS_FILE, 'w') as f:
-        json.dump(alerts, f, indent=4)
+        json.dump(deduped, f, indent=4)
 
 def fetch_yahoo_data(ticker_symbol, interval, period):
     try:
@@ -55,7 +57,7 @@ def fetch_yahoo_data(ticker_symbol, interval, period):
 def send_telegram_alert(photo_path, caption):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print("Telegram credentials missing in environment variables.")
-        return
+        return False
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
     with open(photo_path, 'rb') as photo:
@@ -64,6 +66,8 @@ def send_telegram_alert(photo_path, caption):
         response = requests.post(url, data=payload, files=files)
         if not response.ok:
             print(f"Failed to send Telegram alert: {response.text}")
+            return False
+        return True
 
 def get_weekly_trend(df_weekly):
     if df_weekly is None or len(df_weekly) < 201:
@@ -151,6 +155,9 @@ def generate_crt_chart(symbol, timeframe_name, df_closed, ref_high, ref_low, set
 def closed_inside_range(close_price, low_bound, high_bound):
     return (low_bound <= close_price) and (close_price <= high_bound)
 
+def normalize_timestamp(ts):
+    return pd.Timestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
 def evaluate_crt(symbol, timeframe_name, df, df_weekly):
     if df is None or len(df) < 8:
         return None
@@ -158,7 +165,7 @@ def evaluate_crt(symbol, timeframe_name, df, df_weekly):
     df_closed = df.iloc[:-1]
 
     sweep_bar = df_closed.iloc[-1]
-    sweep_time = str(df_closed.index[-1])
+    sweep_time = normalize_timestamp(df_closed.index[-1])
     sweep_low = sweep_bar['Low']
     sweep_high = sweep_bar['High']
     sweep_close = sweep_bar['Close']
@@ -254,8 +261,9 @@ def evaluate_crt(symbol, timeframe_name, df, df_weekly):
     return setup
 
 def run_bot_loop():
-    print("Starting CRT Yahoo Finance Scanner (Closed Sweep + Inside Range + FVG Only)...")
+    print("Starting CRT Yahoo Finance Scanner (Daily 11:01 PM WAT | Closed Sweep + Inside Range + FVG Only)...")
     sent_alerts = load_sent_alerts()
+    sent_set = set(sent_alerts)
     new_alerts_found = False
 
     for symbol, ticker in TICKER_MAPPING.items():
@@ -275,7 +283,7 @@ def run_bot_loop():
                     f"{setup['type']}_{setup['rc_high']:.5f}_{setup['rc_low']:.5f}"
                 )
 
-                if alert_id in sent_alerts:
+                if alert_id in sent_set:
                     print(f"Skipping already sent alert for {symbol} [{tf_name}] ({setup['model']})")
                     continue
 
@@ -292,11 +300,11 @@ def run_bot_loop():
                     f"• *CRT Low:* `{setup['rc_low']:.5f}`\n"
                     f"• *Sweep Extreme:* `{setup['sweep_extreme']:.5f}`"
                 )
-                send_telegram_alert(setup['chart_path'], caption)
-                print(f"Alert sent for {setup['symbol']} [{setup['timeframe']}] - {setup['model']}")
-
-                sent_alerts.append(alert_id)
-                new_alerts_found = True
+                if send_telegram_alert(setup['chart_path'], caption):
+                    print(f"Alert sent for {setup['symbol']} [{setup['timeframe']}] - {setup['model']}")
+                    sent_alerts.append(alert_id)
+                    sent_set.add(alert_id)
+                    new_alerts_found = True
 
     if new_alerts_found:
         save_sent_alerts(sent_alerts)
