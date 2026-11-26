@@ -712,5 +712,11 @@
     "FRA40_Weekly_2026-11-16 00:00:00_Multiple-Candle CRT_Bearish Multi-Bar Sweep_8401.71973_7728.45020",
     "FRA40_Daily_2026-11-24 00:00:00_2-Candle CRT_Bearish 2-Candle Rejection_8059.58984_7949.50977",
     "XAUUSD_Daily_2026-11-24 00:00:00_Classic 3-Candle CRT_Bullish Classic Sweep_3691.00000_3552.30005",
-    "SPX500_Daily_2026-11-24 00:00:00_2-Candle CRT_Bullish 2-Candle Rejection_7295.60010_7152.66016"
+    "SPX500_Daily_2026-11-24 00:00:00_2-Candle CRT_Bullish 2-Candle Rejection_7295.60010_7152.66016",
+    "EURUSD_Daily_2026-11-25 00:00:00_Inside Bar CRT_Bearish Inside Bar Sweep_1.09798_1.08981",
+    "AUDUSD_Daily_2026-11-25 00:00:00_Inside Bar CRT_Bullish Inside Bar Sweep_0.66561_0.66207",
+    "USDJPY_Daily_2026-11-25 00:00:00_2-Candle CRT_Bullish 2-Candle Rejection_159.56700_158.76300",
+    "USDCHF_Daily_2026-11-25 00:00:00_2-Candle CRT_Bullish 2-Candle Rejection_0.84282_0.83451",
+    "JP225_Daily_2026-11-25 00:00:00_Classic 3-Candle CRT_Bullish Classic Sweep_59262.57031_57009.98828",
+    "XAUUSD_Daily_2026-11-25 00:00:00_Multiple-Candle CRT_Bullish Multi-Bar Sweep_3859.30005_3502.89990"
 ]
